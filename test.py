@@ -5,6 +5,7 @@ import logging
 import schedule
 import time
 import asyncio
+import threading
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
@@ -22,6 +23,9 @@ from telegram.error import TelegramError
 
 # Environment variables
 from dotenv import load_dotenv
+
+# Web server for Render (minimal)
+from http.server import HTTPServer, BaseHTTPRequestHandler
 
 # Load environment variables
 load_dotenv()
@@ -219,7 +223,7 @@ class GmailTelegramBot:
 
         # Shorten subject if too long
         if len(subject) > 60:
-            subject = subject[:57] + "..."        # Shorten message body
+            subject = subject[:57] + "..."  # Shorten message body
         if len(body) > 400:
             body = body[:397] + "..."
 
@@ -245,7 +249,7 @@ ID: {email_data['id'][:10]}..."""
                 return
 
             # Build query with time filter
-            query = account.query            # For first check, use bot start time
+            query = account.query  # For first check, use bot start time
             # For subsequent checks, use last check time
             if account.last_check is None:
                 # First check - use bot start time
@@ -303,7 +307,7 @@ ID: {email_data['id'][:10]}..."""
 
         # Run initial check after 1 minute
         # (to give time for start message to be sent)
-        schedule.every(1).minutes.do(self.check_all_emails).tag("initial")        # Main loop
+        schedule.every(1).minutes.do(self.check_all_emails).tag("initial")  # Main loop
         try:
             while True:
                 schedule.run_pending()
@@ -329,16 +333,40 @@ ID: {email_data['id'][:10]}..."""
         except Exception as e:
             pass  # Main loop error
 
+class HealthCheckHandler(BaseHTTPRequestHandler):
+    """Minimal web server for Render health checks"""
+    def do_GET(self):
+        if self.path == '/health' or self.path == '/':
+            self.send_response(200)
+            self.send_header('Content-type', 'text/plain')
+            self.end_headers()
+            self.wfile.write(b'Gmail Bot is running!')
+        else:
+            self.send_response(404)
+            self.end_headers()
+    
+    def log_message(self, format, *args):
+        # Disable logging for web server
+        pass
+
+def start_health_server():
+    """Start minimal web server for Render"""
+    port = int(os.environ.get('PORT', 10000))
+    server = HTTPServer(('0.0.0.0', port), HealthCheckHandler)
+    server.serve_forever()
 
 def main():
     """Main function"""
+    # Start health server in a separate thread for Render
+    if os.environ.get('PORT'):  # Only on server platforms like Render
+        threading.Thread(target=start_health_server, daemon=True).start()
+    
     # Create bot instance
-    bot = GmailTelegramBot()
-
-    # Add your main Gmail account
+    bot = GmailTelegramBot()    # Add your main Gmail account
     bot.add_email_account(
         name="kridderurt",
-        credentials_file="credentials_kridd.json",        query="is:unread",  # All NEW unread messages
+        credentials_file="credentials_kridd.json",
+        query="is:unread",  # All NEW unread messages
     )
 
     # Add other Gmail accounts - uncomment and modify as needed
@@ -365,9 +393,7 @@ def main():
     #     name="💼 Important Messages",
     #     credentials_file="credentials_main.json",
     #     query="is:unread (is:important OR from:boss@company.com)"
-    # )
-
-    # bot.add_email_account(
+    # )    # bot.add_email_account(
     #     name="🔔 Notifications",
     #     credentials_file="credentials_main.json",
     #     query="is:unread from:(noreply@* OR notifications@*)"
