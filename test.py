@@ -337,7 +337,7 @@ def main():
 
     # Add your main Gmail account
     bot.add_email_account(
-        name="kridderur",
+        name="kridderurt",
         credentials_file="credentials_kridd.json",        query="is:unread",  # All NEW unread messages
     )
 
