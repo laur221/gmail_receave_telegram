@@ -337,19 +337,19 @@ def main():
 
     # Add your main Gmail account
     bot.add_email_account(
-        name="kridderur@gmail.com",
+        name="kridderur",
         credentials_file="credentials_kridd.json",        query="is:unread",  # All NEW unread messages
     )
 
     # Add other Gmail accounts - uncomment and modify as needed
     bot.add_email_account(
-        name="laurentiupinzaru5@gmail.com",
+        name="laurentiupinzaru5",
         credentials_file="credentials_laur5.json",  # File for 2nd account
         query="is:unread",
     )
 
     bot.add_email_account(
-        name="pinzaru.laurentiu@usarb.md",
+        name="pinzaru.laurentiu",
         credentials_file="credentials_lauru.json",  # File for work account
         query="is:unread",
     )
