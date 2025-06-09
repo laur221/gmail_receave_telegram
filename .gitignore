@@ -9,6 +9,7 @@ __pycache__
 .env
 credentials_*.json
 token_*.json
+*.json
 
 # Fișiere temporare
 *.tmp

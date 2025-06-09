@@ -6,6 +6,7 @@ import schedule
 import time
 import asyncio
 import threading
+import requests
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
@@ -61,6 +62,9 @@ class GmailTelegramBot:
         self.bot = Bot(token=self.telegram_bot_token)
         self.email_accounts: List[EmailAccount] = []
         self.start_time = datetime.now()  # Time when bot started
+        
+        # Test Telegram connection immediately
+        self.test_telegram_connection()
 
     def add_email_account(
         self,
@@ -77,34 +81,48 @@ class GmailTelegramBot:
             name=name,
             credentials_file=credentials_file,
             token_file=token_file,
-            query=query,
-        )
+            query=query,        )
         self.email_accounts.append(account)
         pass  # Account added silently    def authenticate_gmail(self, account: EmailAccount) -> Any:
         """Gmail authentication for a specific account"""
         creds = None
 
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] 🔐 Authenticating {account.name}...")
+
         # Load existing token
         if os.path.exists(account.token_file):
+            print(f"[{datetime.now().strftime('%H:%M:%S')}] 📄 Loading token file: {account.token_file}")
             creds = Credentials.from_authorized_user_file(account.token_file, SCOPES)
 
         # If no valid credentials, request authentication
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] 🔄 Refreshing expired token...")
                 creds.refresh(Request())
             else:
                 if not os.path.exists(account.credentials_file):
+                    print(f"[{datetime.now().strftime('%H:%M:%S')}] ❌ Credentials file not found: {account.credentials_file}")
                     return None  # Credentials file not found
 
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] 🔑 Starting OAuth flow...")
                 flow = InstalledAppFlow.from_client_secrets_file(
                     account.credentials_file, SCOPES
                 )
-                creds = flow.run_local_server(port=0)
+                
+                # On Render or cloud platforms, we can't use local server
+                if os.getenv('PORT'):
+                    print(f"[{datetime.now().strftime('%H:%M:%S')}] ⚠️  Running on cloud platform - OAuth may fail!")
+                    print(f"[{datetime.now().strftime('%H:%M:%S')}] 💡 Please ensure token files are properly uploaded!")
+                    return None
+                else:
+                    creds = flow.run_local_server(port=0)
 
             # Save credentials for next execution
             with open(account.token_file, "w") as token:
                 token.write(creds.to_json())
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] 💾 Token saved: {account.token_file}")
 
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] ✅ Gmail authentication successful for {account.name}")
         return build("gmail", "v1", credentials=creds)
 
     def get_email_content(self, service: Any, message_id: str) -> Dict[str, str]:
@@ -181,12 +199,12 @@ class GmailTelegramBot:
             response = requests.post(url, data=data, timeout=30)
 
             if response.status_code == 200:
-                pass  # Success
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] ✅ Telegram message sent")
             else:
-                pass  # HTTP Error
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] ❌ Telegram error: {response.status_code}")
 
         except Exception as e:
-            pass  # Telegram error
+            print(f"[{datetime.now().strftime('%H:%M:%S')}] ❌ Telegram failed: {e}")
 
     def send_telegram_message(self, message: str):
         """Alias for synchronous function (for compatibility)"""
@@ -334,6 +352,34 @@ ID: {email_data['id'][:10]}..."""
         except Exception as e:
             pass  # Main loop error
 
+    def test_telegram_connection(self):
+        """Test Telegram connection and send confirmation message"""
+        try:
+            import requests
+            
+            print(f"[{datetime.now().strftime('%H:%M:%S')}] Testing Telegram connection...")
+            
+            # Test with requests (more reliable than telegram library on some platforms)
+            url = f"https://api.telegram.org/bot{self.telegram_bot_token}/sendMessage"
+            data = {
+                "chat_id": self.telegram_chat_id,
+                "text": f"🚀 <b>Gmail Bot connection test!</b>\n\n"
+                        f"⏰ Started at: {self.start_time.strftime('%H:%M:%S')}\n"
+                        f"🌍 Platform: {'Render' if os.getenv('PORT') else 'Local'}\n"
+                        f"📱 Connection: ✅ Working!\n\n"
+                        f"<i>Bot will start monitoring emails shortly...</i>",
+                "parse_mode": "HTML"
+            }
+            
+            response = requests.post(url, data=data, timeout=10)
+            if response.status_code == 200:
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] ✅ Telegram test message sent!")
+            else:
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] ❌ Telegram error: {response.status_code}")
+                
+        except Exception as e:
+            print(f"[{datetime.now().strftime('%H:%M:%S')}] ❌ Telegram test failed: {e}")
+
 class HealthCheckHandler(BaseHTTPRequestHandler):
     """Minimal web server for Render health checks"""
     def do_GET(self):
@@ -361,9 +407,32 @@ def main():
     # Start health server in a separate thread for Render
     if os.environ.get('PORT'):  # Only on server platforms like Render
         threading.Thread(target=start_health_server, daemon=True).start()
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] 🌐 Health server started on port {os.environ.get('PORT')}")
+      # Test environment and files
+    print(f"[{datetime.now().strftime('%H:%M:%S')}] 🔍 Checking environment variables...")
+    telegram_token = os.getenv("TELEGRAM_BOT_TOKEN")
+    telegram_chat = os.getenv("TELEGRAM_CHAT_ID")
+    
+    if telegram_token:
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] ✅ TELEGRAM_BOT_TOKEN: {telegram_token[:10]}...{telegram_token[-10:]}")
+    else:
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] ❌ TELEGRAM_BOT_TOKEN missing!")
+        
+    if telegram_chat:
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] ✅ TELEGRAM_CHAT_ID: {telegram_chat}")
+    else:
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] ❌ TELEGRAM_CHAT_ID missing!")
+    
+    print(f"[{datetime.now().strftime('%H:%M:%S')}] 🔍 Checking Gmail credentials files...")
+    required_files = ["credentials_kridd.json", "credentials_laur5.json", "credentials_lauru.json"]
+    for file in required_files:
+        if os.path.exists(file):
+            print(f"[{datetime.now().strftime('%H:%M:%S')}] ✅ {file} found")
+        else:
+            print(f"[{datetime.now().strftime('%H:%M:%S')}] ❌ {file} missing!")
     
     # Create bot instance
-    bot = GmailTelegramBot()    # Add your main Gmail account
+    bot = GmailTelegramBot()# Add your main Gmail account
     bot.add_email_account(
         name="kridderurt",
         credentials_file="credentials_kridd.json",
