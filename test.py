@@ -67,7 +67,7 @@ class GmailTelegramBot:
     ):
         """Add an email account for monitoring"""
         if token_file is None:
-            token_file = f"token_{name}.json"
+            token_file = f"{name}.json"
 
         account = EmailAccount(
             name=name,
