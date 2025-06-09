@@ -26,7 +26,7 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Configure logging dezactivat pentru production
+# Configure logging disabled for production
 logger = None
 
 # Gmail API scopes
@@ -35,7 +35,7 @@ SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
 @dataclass
 class EmailAccount:
-    """Clasa pentru configurarea unui cont de email"""
+    """Class for email account configuration"""
 
     name: str
     credentials_file: str
@@ -51,12 +51,12 @@ class GmailTelegramBot:
 
         if not self.telegram_bot_token or not self.telegram_chat_id:
             raise ValueError(
-                "TELEGRAM_BOT_TOKEN și TELEGRAM_CHAT_ID trebuie să fie setate în .env"
+                "TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID must be set in .env"
             )
 
         self.bot = Bot(token=self.telegram_bot_token)
         self.email_accounts: List[EmailAccount] = []
-        self.start_time = datetime.now()  # Timpul când a pornit bot-ul
+        self.start_time = datetime.now()  # Time when bot started
 
     def add_email_account(
         self,
@@ -65,7 +65,7 @@ class GmailTelegramBot:
         token_file: str = None,
         query: str = "is:unread",
     ):
-        """Adaugă un cont de email pentru monitorizare"""
+        """Add an email account for monitoring"""
         if token_file is None:
             token_file = f"token_{name}.json"
 
@@ -76,17 +76,15 @@ class GmailTelegramBot:
             query=query,
         )
         self.email_accounts.append(account)
-        pass  # Account added silently
-
-    def authenticate_gmail(self, account: EmailAccount) -> Any:
-        """Autentificare Gmail pentru un cont specific"""
+        pass  # Account added silently    def authenticate_gmail(self, account: EmailAccount) -> Any:
+        """Gmail authentication for a specific account"""
         creds = None
 
-        # Încarcă token-ul existent
+        # Load existing token
         if os.path.exists(account.token_file):
             creds = Credentials.from_authorized_user_file(account.token_file, SCOPES)
 
-        # Dacă nu există credențiale valide, solicită autentificarea
+        # If no valid credentials, request authentication
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
@@ -99,33 +97,33 @@ class GmailTelegramBot:
                 )
                 creds = flow.run_local_server(port=0)
 
-            # Salvează credențialele pentru următoarea execuție
+            # Save credentials for next execution
             with open(account.token_file, "w") as token:
                 token.write(creds.to_json())
 
         return build("gmail", "v1", credentials=creds)
 
     def get_email_content(self, service: Any, message_id: str) -> Dict[str, str]:
-        """Extrage conținutul unui email"""
+        """Extract email content"""
         try:
             message = (
                 service.users().messages().get(userId="me", id=message_id).execute()
             )
 
-            # Extrage header-ele
+            # Extract headers
             headers = message["payload"].get("headers", [])
             subject = next(
-                (h["value"] for h in headers if h["name"] == "Subject"), "Fără subiect"
+                (h["value"] for h in headers if h["name"] == "Subject"), "No subject"
             )
             sender = next(
                 (h["value"] for h in headers if h["name"] == "From"),
-                "Expeditor necunoscut",
+                "Unknown sender",
             )
             date = next(
-                (h["value"] for h in headers if h["name"] == "Date"), "Dată necunoscută"
+                (h["value"] for h in headers if h["name"] == "Date"), "Unknown date"
             )
 
-            # Extrage conținutul
+            # Extract content
             body = self.extract_message_body(message["payload"])
 
             return {
@@ -133,13 +131,13 @@ class GmailTelegramBot:
                 "subject": subject,
                 "sender": sender,
                 "date": date,
-                "body": body[:1000],  # Limitează la 1000 de caractere
+                "body": body[:1000],  # Limit to 1000 characters
             }
         except Exception as e:
             return None
 
     def extract_message_body(self, payload: Dict) -> str:
-        """Extrage corpul mesajului din payload"""
+        """Extract message body from payload"""
         body = ""
 
         try:
@@ -159,14 +157,14 @@ class GmailTelegramBot:
                 data = payload["body"]["data"]
                 body = base64.urlsafe_b64decode(data).decode("utf-8")
         except Exception as e:
-            body = "Nu s-a putut extrage conținutul mesajului"
+            body = "Could not extract message content"
 
         return body
 
     def send_telegram_message_sync(self, message: str):
-        """Trimite mesaj pe Telegram (versiune sincronă, fără probleme de event loop)"""
+        """Send message to Telegram (synchronous version, no event loop issues)"""
         try:
-            # Folosește requests în loc de async pentru a evita problemele cu event loop
+            # Use requests instead of async to avoid event loop issues
             import requests
 
             url = f"https://api.telegram.org/bot{self.telegram_bot_token}/sendMessage"
@@ -187,15 +185,15 @@ class GmailTelegramBot:
             pass  # Telegram error
 
     def send_telegram_message(self, message: str):
-        """Alias pentru funcția sincronă (pentru compatibilitate)"""
+        """Alias for synchronous function (for compatibility)"""
         self.send_telegram_message_sync(message)
 
     def escape_html(self, text: str) -> str:
-        """Escapează caracterele HTML pentru Telegram"""
+        """Escape HTML characters for Telegram"""
         if not text:
             return ""
 
-        # Înlocuiește caracterele HTML speciale
+        # Replace HTML special characters
         text = text.replace("&", "&amp;")
         text = text.replace("<", "&lt;")
         text = text.replace(">", "&gt;")
@@ -207,33 +205,31 @@ class GmailTelegramBot:
     def format_email_message(
         self, email_data: Dict[str, str], account_name: str
     ) -> str:
-        """Formatează mesajul pentru Telegram"""
-        # Escapează toate valorile HTML
+        """Format message for Telegram"""
+        # Escape all HTML values
         sender = self.escape_html(email_data["sender"])
         subject = self.escape_html(email_data["subject"])
         body = self.escape_html(email_data["body"])
         date = self.escape_html(email_data["date"])
         account_name = self.escape_html(account_name)
 
-        # Scurtează expeditorul dacă este prea lung
+        # Shorten sender if too long
         if len(sender) > 50:
             sender = sender[:47] + "..."
 
-        # Scurtează subiectul dacă este prea lung
+        # Shorten subject if too long
         if len(subject) > 60:
-            subject = subject[:57] + "..."
-
-        # Scurtează corpul mesajului
+            subject = subject[:57] + "..."        # Shorten message body
         if len(body) > 400:
             body = body[:397] + "..."
 
-        message = f"""📧 <b>Nou email pe {account_name}</b>
+        message = f"""📧 <b>New email on {account_name}</b>
 
-<b>De la:</b> {sender}
-<b>Subiect:</b> {subject}
-<b>Data:</b> {email_data['date']}
+<b>From:</b> {sender}
+<b>Subject:</b> {subject}
+<b>Date:</b> {email_data['date']}
 
-<b>Conținut:</b>
+<b>Content:</b>
 {body}
 
 ---
@@ -242,143 +238,142 @@ ID: {email_data['id'][:10]}..."""
         return message.strip()
 
     def check_emails_for_account(self, account: EmailAccount):
-        """Verifică email-urile pentru un cont specific"""
+        """Check emails for a specific account"""
         try:
             service = self.authenticate_gmail(account)
             if not service:
                 return
 
-            # Construiește query-ul cu filtru de timp
-            query = account.query
-
-            # Pentru prima verificare, folosește timpul de start al bot-ului
-            # Pentru verificările următoare, folosește ultima verificare
+            # Build query with time filter
+            query = account.query            # For first check, use bot start time
+            # For subsequent checks, use last check time
             if account.last_check is None:
-                # Prima verificare - folosește timpul de start al bot-ului
+                # First check - use bot start time
                 after_timestamp = int(self.start_time.timestamp())
             else:
-                # Verificări ulterioare - folosește ultima verificare
+                # Subsequent checks - use last check time
                 after_timestamp = int(account.last_check.timestamp())
 
             query += f" after:{after_timestamp}"
 
-            # Obține lista de mesaje
+            # Get message list
             results = service.users().messages().list(userId="me", q=query).execute()
             messages = results.get("messages", [])
 
-            # Procesează fiecare mesaj
+            # Process each message
             for message in messages:
                 message_id = message["id"]
 
-                # Extrage conținutul email-ului
+                # Extract email content
                 email_data = self.get_email_content(service, message_id)
                 if email_data:
-                    # Formatează și trimite mesajul
+                    # Format and send message
                     telegram_message = self.format_email_message(
                         email_data, account.name
                     )
-                    # Trimite mesajul pe Telegram
+                    # Send message to Telegram
                     self.send_telegram_message_sync(telegram_message)
 
-                    # Pauză pentru a evita spam-ul
+                    # Pause to avoid spam
                     time.sleep(2)
-            # Actualizează timpul ultimei verificări
+            # Actualizează timpul ultimei verificări            # Update last check time
             account.last_check = datetime.now()
 
         except Exception as e:
             pass  # Error checking emails
 
     def check_all_emails(self):
-        """Verifică email-urile pentru toate conturile"""
+        """Check emails for all accounts"""
         for account in self.email_accounts:
             self.check_emails_for_account(account)
 
     def start_monitoring(self, check_interval_minutes: int = 5):
-        """Începe monitorizarea automată"""
-        # Trimite mesaj de confirmare pe Telegram
+        """Start automatic monitoring"""
+        # Send confirmation message to Telegram
         self.send_telegram_message_sync(
-            f"🤖 <b>Gmail Bot pornit!</b>\n\n"
-            f"⏰ Început monitorizare: {self.start_time.strftime('%H:%M:%S')}\n"
-            f"📧 Conturi monitorizate: {len(self.email_accounts)}\n"
-            f"🔄 Interval verificare: {check_interval_minutes} min\n\n"
-            f"📱 <i>Vei primi notificări doar pentru mesajele noi!</i>"
+            f"🤖 <b>Gmail Bot started!</b>\n\n"
+            f"⏰ Monitoring started: {self.start_time.strftime('%H:%M:%S')}\n"
+            f"📧 Accounts monitored: {len(self.email_accounts)}\n"
+            f"🔄 Check interval: {check_interval_minutes} min\n\n"
+            f"📱 <i>You will receive notifications only for new messages!</i>"
         )
 
-        # Programează verificarea periodică
+        # Schedule periodic checking
         schedule.every(check_interval_minutes).minutes.do(self.check_all_emails)
 
-        # Rulează o verificare inițială după 1 minut
-        # (pentru a da timp să se trimită mesajul de start)
-        schedule.every(1).minutes.do(self.check_all_emails).tag("initial")
-
-        # Loop principal
+        # Run initial check after 1 minute
+        # (to give time for start message to be sent)
+        schedule.every(1).minutes.do(self.check_all_emails).tag("initial")        # Main loop
         try:
             while True:
-                schedule.run_pending()                # După prima verificare, șterge task-ul inițial
+                schedule.run_pending()
+
+                # After first check, remove initial task
                 if schedule.get_jobs("initial"):
-                    # Verifică dacă au trecut 1 minut de la start
+                    # Check if 1 minute has passed since start
                     if datetime.now() - self.start_time > timedelta(minutes=1):
                         schedule.clear("initial")
 
-                time.sleep(30)  # Verifică la fiecare 30 de secunde
+                time.sleep(30)  # Check every 30 seconds
         except KeyboardInterrupt:
-            # Trimite mesaj de oprire pe Telegram
+            # Send stop message to Telegram
             try:
                 self.send_telegram_message_sync(
-                    f"🛑 <b>Gmail Bot oprit</b>\n\n"
-                    f"⏰ Oprit la: {datetime.now().strftime('%H:%M:%S')}\n"
-                    f"📊 Durata funcționare: {datetime.now() - self.start_time}\n\n"
-                    f"👋 <i>Pentru a reporni, rulează din nou scriptul!</i>"                )
+                    f"🛑 <b>Gmail Bot stopped</b>\n\n"
+                    f"⏰ Stopped at: {datetime.now().strftime('%H:%M:%S')}\n"
+                    f"📊 Runtime duration: {datetime.now() - self.start_time}\n\n"
+                    f"👋 <i>To restart, run the script again!</i>"
+                )
             except:
-                pass  # Ignoră erorile la oprire
+                pass  # Ignore errors on stop
         except Exception as e:
             pass  # Main loop error
 
 
 def main():
-    """Funcția principală"""
-    # Creează instanța bot-ului
+    """Main function"""
+    # Create bot instance
     bot = GmailTelegramBot()
 
-    # Adaugă contul tău Gmail principal
+    # Add your main Gmail account
     bot.add_email_account(
-        name="📧 kridderur@gmail.com",
-        credentials_file="credentials_kridd.json",
-        query="is:unread",  # Toate mesajele necitite NOI
+        name="kridderur@gmail.com",
+        credentials_file="credentials_kridd.json",        query="is:unread",  # All NEW unread messages
     )
 
-    # Adaugă alte conturi Gmail - decomentează și modifică după nevoie
+    # Add other Gmail accounts - uncomment and modify as needed
     bot.add_email_account(
         name="laurentiupinzaru5@gmail.com",
-        credentials_file="credentials_laur5.json",  # Fișierul pentru al 2-lea cont
+        credentials_file="credentials_laur5.json",  # File for 2nd account
         query="is:unread",
     )
 
     bot.add_email_account(
         name="pinzaru.laurentiu@usarb.md",
-        credentials_file="credentials_lauru.json",  # Fișierul pentru contul de lucru
+        credentials_file="credentials_lauru.json",  # File for work account
         query="is:unread",
     )
 
     # bot.add_email_account(
-    #     name="📧 Cont personal",
-    #     credentials_file="credentials_personal.json", # Fișierul pentru contul personal
+    #     name="📧 Personal Account",
+    #     credentials_file="credentials_personal.json", # File for personal account
     #     query="is:unread"
     # )
 
-    # Exemple de filtre avansate pentru conturi specifice:
+    # Examples of advanced filters for specific accounts:
     # bot.add_email_account(
-    #     name="💼 Mesaje Importante",
-    #     credentials_file="credentials_principal.json",
+    #     name="💼 Important Messages",
+    #     credentials_file="credentials_main.json",
     #     query="is:unread (is:important OR from:boss@company.com)"
     # )
 
     # bot.add_email_account(
-    #     name="🔔 Notificări",
-    #     credentials_file="credentials_principal.json",
+    #     name="🔔 Notifications",
+    #     credentials_file="credentials_main.json",
     #     query="is:unread from:(noreply@* OR notifications@*)"
     # )
-    # Începe monitorizarea (verifică la fiecare 5 minute)
+    
+    # Start monitoring (check every 5 minutes)
     bot.start_monitoring(check_interval_minutes=5)
 
 
