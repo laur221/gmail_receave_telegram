@@ -1,58 +1,58 @@
 # 📧➡️📱 Gmail Telegram Bot Multi-Account
 
-Bot automat care monitorizează multiple conturi Gmail și trimite notificări instant pe Telegram pentru mesajele noi.
+Automated bot that monitors multiple Gmail accounts and sends instant Telegram notifications for new messages.
 
-## 🚀 **Caracteristici principale:**
+## 🚀 **Key Features:**
 
-- ✅ **Multi-account Gmail** - Monitorizează mai multe conturi simultan
-- ✅ **Filtrare inteligentă** - Doar mesajele noi (nu toate necitite)
-- ✅ **Securitate avansată** - Credențiale criptate, environment variables
-- ✅ **Deployment flexibil** - Windows local + cloud platforms (Railway, DigitalOcean, etc.)
-- ✅ **Fără dubluri** - Timestamp-based filtering
-- ✅ **Logging detaliat** - Monitorizare completă în timp real
-- ✅ **Encoding UTF-8** - Suport complet pentru caractere românești
-- ✅ **Error handling robust** - Restart automat și recuperare după erori
+- ✅ **Multi-account Gmail** - Monitor multiple accounts simultaneously
+- ✅ **Smart filtering** - Only new messages (not all unread)
+- ✅ **Advanced security** - Encrypted credentials, environment variables
+- ✅ **Flexible deployment** - Windows local + cloud platforms (Railway, DigitalOcean, etc.)
+- ✅ **No duplicates** - Timestamp-based filtering
+- ✅ **Detailed logging** - Complete real-time monitoring
+- ✅ **UTF-8 encoding** - Full support for international characters
+- ✅ **Robust error handling** - Auto restart and error recovery
 
-## 📁 **Structura proiectului:**
+## 📁 **Project Structure:**
 
 ```
 📦 Gmail Telegram Bot
-├── 🔧 **Scripts principale:**
-│   ├── test.py                    # Bot pentru Windows (local)
-│   ├── test_server.py             # Bot pentru server (production)
-│   └── encrypt_credentials.py     # Criptare/decriptare credențiale
+├── 🔧 **Main Scripts:**
+│   ├── test.py                    # Bot for Windows (local)
+│   ├── test_server.py             # Bot for server (production)
+│   └── encrypt_credentials.py     # Encrypt/decrypt credentials
 │
-├── ⚙️ **Configurare:**
-│   ├── requirements.txt           # Dependencies pentru Windows
-│   ├── requirements_server.txt    # Dependencies pentru server
+├── ⚙️ **Configuration:**
+│   ├── requirements.txt           # Dependencies for Windows
+│   ├── requirements_server.txt    # Dependencies for server
 │   ├── .env                       # Environment variables (local)
-│   ├── .env_server                # Template pentru server
-│   └── config_example.py          # Exemplu configurare
+│   ├── .env_server                # Template for server
+│   └── config_example.py          # Configuration example
 │
-├── 🔐 **Credențiale:**
-│   ├── credentials_*.json         # Credențiale Gmail (plain)
-│   ├── credentials_*.encrypted    # Credențiale Gmail (criptate)
-│   └── token_*.json              # Token-uri OAuth (generate automat)
+├── 🔐 **Credentials:**
+│   ├── credentials_*.json         # Gmail credentials (plain)
+│   ├── credentials_*.encrypted    # Gmail credentials (encrypted)
+│   └── token_*.json              # OAuth tokens (auto-generated)
 │
-├── 🛠️ **Utilitare:**
-│   ├── setup_helper.py           # Helper pentru configurare inițială
-│   ├── test_config.py            # Test configurare
-│   ├── start.bat                 # Starter pentru Windows (batch)
-│   ├── start.ps1                 # Starter pentru Windows (PowerShell)
-│   └── run_bot.ps1               # Runner cu logging
+├── 🛠️ **Utilities:**
+│   ├── setup_helper.py           # Helper for initial setup
+│   ├── test_config.py            # Configuration test
+│   ├── start.bat                 # Windows starter (batch)
+│   ├── start.ps1                 # Windows starter (PowerShell)
+│   └── run_bot.ps1               # Runner with logging
 │
-└── 📚 **Documentație:**
-    ├── README.md                 # Acest fișier
-    ├── ADAUGA_CONTURI.md         # Cum să adaugi conturi Gmail noi
-    ├── SECURITATE_SERVER.md      # Ghid securitate pentru deployment
-    ├── COMPARATIE_PLATFORME.md   # Comparație platforme hosting
-    ├── DEPLOYMENT_GHIDURI.md     # Ghiduri step-by-step deployment
-    └── SETUP_RAILWAY.md          # Setup specific pentru Railway
+└── 📚 **Documentation:**
+    ├── README.md                 # This file
+    ├── ADAUGA_CONTURI.md         # How to add new Gmail accounts
+    ├── SECURITATE_SERVER.md      # Security guide for deployment
+    ├── COMPARATIE_PLATFORME.md   # Platform comparison
+    ├── DEPLOYMENT_GHIDURI.md     # Step-by-step deployment guides
+    └── SETUP_RAILWAY.md          # Railway-specific setup
 ```
 
 ## 🏁 **Quick Start:**
 
-### 🔰 **1. Setup local (Windows):**
+### 🔰 **1. Local setup (Windows):**
 
 ```powershell
 # Clone repository
@@ -62,131 +62,131 @@ cd gmail-bot
 # Install dependencies
 pip install -r requirements.txt
 
-# Configurare (urmează ghidul interactiv)
+# Configuration (follow interactive guide)
 python setup_helper.py
 
-# Test configurare
+# Test configuration
 python test_config.py
 
-# Rulează bot-ul
+# Run bot
 python test.py
 ```
 
-### ☁️ **2. Deploy pe server (recomandat: Railway):**
+### ☁️ **2. Deploy to server (recommended: Railway):**
 
 ```bash
-# 1. Push pe GitHub (repository privat!)
+# 1. Push to GitHub (private repository!)
 git add .
 git commit -m "Ready for deployment"
 git push origin main
 
-# 2. Mergi pe railway.app și conectează repo-ul
-# 3. Setează environment variables în dashboard
-# 4. Deploy automat!
+# 2. Go to railway.app and connect your repo
+# 3. Set environment variables in dashboard
+# 4. Auto deploy!
 ```
 
-**👉 Pentru ghiduri detaliate, vezi: [`DEPLOYMENT_GHIDURI.md`](DEPLOYMENT_GHIDURI.md)**
+**👉 For detailed guides, see: [`DEPLOYMENT_GHIDURI.md`](DEPLOYMENT_GHIDURI.md)**
 
-## 📖 **Ghiduri disponibile:**
+## 📖 **Available Guides:**
 
-| Ghid | Descriere | Pentru cine |
-|------|-----------|-------------|
-| [`ADAUGA_CONTURI.md`](ADAUGA_CONTURI.md) | Cum să adaugi conturi Gmail noi | Oricine |
-| [`SECURITATE_SERVER.md`](SECURITATE_SERVER.md) | Securitate pentru deployment | Server deployment |
-| [`COMPARATIE_PLATFORME.md`](COMPARATIE_PLATFORME.md) | Comparație platforme hosting | Alegerea platformei |
-| [`DEPLOYMENT_GHIDURI.md`](DEPLOYMENT_GHIDURI.md) | Ghiduri step-by-step pentru fiecare platformă | Deploy pe server |
-| [`SETUP_RAILWAY.md`](SETUP_RAILWAY.md) | Setup specific pentru Railway | Railway users |
+| Guide | Description | For whom |
+|-------|-------------|----------|
+| [`ADAUGA_CONTURI.md`](ADAUGA_CONTURI.md) | How to add new Gmail accounts | Anyone |
+| [`SECURITATE_SERVER.md`](SECURITATE_SERVER.md) | Security for deployment | Server deployment |
+| [`COMPARATIE_PLATFORME.md`](COMPARATIE_PLATFORME.md) | Hosting platform comparison | Platform selection |
+| [`DEPLOYMENT_GHIDURI.md`](DEPLOYMENT_GHIDURI.md) | Step-by-step guides for each platform | Server deployment |
+| [`SETUP_RAILWAY.md`](SETUP_RAILWAY.md) | Railway-specific setup | Railway users |
 
-## 🔧 **Configurare detaliată:**
+## 🔧 **Detailed Configuration:**
 
-### **Environment Variables necesare:**
+### **Required Environment Variables:**
 
 ```bash
 # Telegram Bot
 TELEGRAM_BOT_TOKEN=your_bot_token_here
 TELEGRAM_CHAT_ID=your_chat_id_here
 
-# Securitate (pentru server)
+# Security (for server)
 ENCRYPTION_PASSWORD=your_strong_password_here
 ```
 
-### **Adăugarea unui cont Gmail nou:**
+### **Adding a new Gmail account:**
 
-1. **Obține credențiale OAuth 2.0** din Google Cloud Console
-2. **Salvează ca** `credentials_nume.json`
-3. **Adaugă în cod** (vezi [`ADAUGA_CONTURI.md`](ADAUGA_CONTURI.md))
-4. **Pentru server**: Criptează cu `encrypt_credentials.py`
+1. **Get OAuth 2.0 credentials** from Google Cloud Console
+2. **Save as** `credentials_name.json`
+3. **Add to code** (see [`ADAUGA_CONTURI.md`](ADAUGA_CONTURI.md))
+4. **For server**: Encrypt with `encrypt_credentials.py`
 
-## 🏆 **Platforme recomandate:**
+## 🏆 **Recommended Platforms:**
 
-### 🥇 **Railway** - Cel mai bun overall
-- ✅ Setup în 5 minute
-- ✅ $5 gratuit/lună
-- ✅ Auto-deploy din GitHub
-- ✅ Environment variables sigure
+### 🥇 **Railway** - Best overall
+- ✅ 5-minute setup
+- ✅ $5 free/month
+- ✅ Auto-deploy from GitHub
+- ✅ Secure environment variables
 
-### 🥈 **DigitalOcean** - Securitate maximă  
-- ✅ Control complet VPS
-- ✅ $6/lună pentru 1GB RAM
-- ✅ SSH access complet
-- ✅ Ideal pentru experți
+### 🥈 **DigitalOcean** - Maximum security  
+- ✅ Full VPS control
+- ✅ $6/month for 1GB RAM
+- ✅ Complete SSH access
+- ✅ Ideal for experts
 
-### 🥉 **Google Cloud Run** - Serverless ieftin
+### 🥉 **Google Cloud Run** - Cheap serverless
 - ✅ Pay-per-use
-- ✅ Free tier generos
-- ✅ Scalare automată
-- ✅ Infrastructură Google
+- ✅ Generous free tier
+- ✅ Auto scaling
+- ✅ Google infrastructure
 
-**👉 Comparație completă: [`COMPARATIE_PLATFORME.md`](COMPARATIE_PLATFORME.md)**
+**👉 Complete comparison: [`COMPARATIE_PLATFORME.md`](COMPARATIE_PLATFORME.md)**
 
-## 🛡️ **Securitate:**
+## 🛡️ **Security:**
 
-### ✅ **Implementat:**
-- Criptare credențiale Gmail cu AES-256
-- Environment variables pentru token-uri
-- Filtrare HTML escape pentru Telegram
-- Logging securizat fără credențiale
-- Repository privat recomandat
+### ✅ **Implemented:**
+- Gmail credentials encryption with AES-256
+- Environment variables for tokens
+- HTML escape filtering for Telegram
+- Secure logging without credentials
+- Private repository recommended
 
-### 🔐 **Pentru production:**
-- Toate credențialele sunt criptate
-- Token-uri în environment variables
-- Firewall și SSH keys (pe VPS)
-- Monitoring și alerting
+### 🔐 **For production:**
+- All credentials are encrypted
+- Tokens in environment variables
+- Firewall and SSH keys (on VPS)
+- Monitoring and alerting
 
-## 📊 **Monitoring și logging:**
+## 📊 **Monitoring and logging:**
 
 ### **Local (Windows):**
 ```
-[2024-01-15 10:30:15] INFO: Bot pornit pentru 3 conturi Gmail
-[2024-01-15 10:30:20] INFO: [principal@gmail.com] Verificare completă - 0 mesaje noi
-[2024-01-15 10:31:25] INFO: [work@gmail.com] Găsit 1 mesaj nou
-[2024-01-15 10:31:26] SUCCESS: Mesaj trimis pe Telegram
+[2024-01-15 10:30:15] INFO: Bot started for 3 Gmail accounts
+[2024-01-15 10:30:20] INFO: [principal@gmail.com] Check complete - 0 new messages
+[2024-01-15 10:31:25] INFO: [work@gmail.com] Found 1 new message
+[2024-01-15 10:31:26] SUCCESS: Message sent to Telegram
 ```
 
 ### **Server (Railway/DigitalOcean):**
-- Logs în timp real prin dashboard
-- Error alerting automat
-- Restart automat la crash
+- Real-time logs through dashboard
+- Auto error alerting
+- Auto restart on crash
 - Performance monitoring
 
-## 🔄 **Update și maintenance:**
+## 🔄 **Update and maintenance:**
 
-### **Update local:**
+### **Local update:**
 ```powershell
 git pull origin main
 pip install -r requirements.txt --upgrade
 python test.py
 ```
 
-### **Update server:**
-- **Railway**: Auto-deploy la fiecare commit GitHub
+### **Server update:**
+- **Railway**: Auto-deploy on every GitHub commit
 - **DigitalOcean**: SSH + git pull + restart service
-- **Cloud platforms**: Redeploy prin dashboard
+- **Cloud platforms**: Redeploy through dashboard
 
 ## ❓ **Troubleshooting:**
 
-### **Probleme comune:**
+### **Common issues:**
 
 1. **"No module named 'google'"**
    ```bash
@@ -194,41 +194,41 @@ python test.py
    ```
 
 2. **"Invalid credentials"**
-   - Verifică fișierele `credentials_*.json`
+   - Check `credentials_*.json` files
    - Re-run setup_helper.py
 
-3. **"Chat not found" pe Telegram**
-   - Verifică TELEGRAM_CHAT_ID
-   - Scrie `/start` la bot
+3. **"Chat not found" on Telegram**
+   - Check TELEGRAM_CHAT_ID
+   - Send `/start` to bot
 
-4. **Bot nu găsește mesaje noi**
-   - Verifică timestamp-ul (bot trimite doar mesaje după pornire)
-   - Check logs pentru erori OAuth
+4. **Bot doesn't find new messages**
+   - Check timestamp (bot only sends messages after startup)
+   - Check logs for OAuth errors
 
-### **Pentru debugging avansat:**
+### **For advanced debugging:**
 ```python
-# Activează logging detaliat în test.py
+# Enable detailed logging in test.py
 logging.basicConfig(level=logging.DEBUG)
 ```
 
-## 🤝 **Contribuții:**
+## 🤝 **Contributing:**
 
-1. Fork repository-ul
-2. Creează branch pentru feature (`git checkout -b feature/amazing-feature`)
-3. Commit modificările (`git commit -m 'Add amazing feature'`)
-4. Push pe branch (`git push origin feature/amazing-feature`)
-5. Deschide Pull Request
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## 📄 **Licență:**
+## 📄 **License:**
 
-Acest proiect este MIT licensed. Vezi `LICENSE` pentru detalii.
+This project is MIT licensed. See `LICENSE` for details.
 
 ## 🆘 **Support:**
 
-- 📖 **Documentație**: Citește ghidurile din folder
-- 🐛 **Bug reports**: Deschide un Issue pe GitHub
-- 💡 **Feature requests**: Deschide un Issue cu tag "enhancement"
-- 🔒 **Probleme de securitate**: Contact direct prin email
+- 📖 **Documentation**: Read the guides in the folder
+- 🐛 **Bug reports**: Open an Issue on GitHub
+- 💡 **Feature requests**: Open an Issue with "enhancement" tag
+- 🔒 **Security issues**: Direct contact via email
 
 ---
 
