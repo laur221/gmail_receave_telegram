@@ -258,11 +258,12 @@ ID: {email_data['id'][:10]}..."""
                 # Subsequent checks - use last check time
                 after_timestamp = int(account.last_check.timestamp())
 
-            query += f" after:{after_timestamp}"
-
-            # Get message list
+            query += f" after:{after_timestamp}"            # Get message list
             results = service.users().messages().list(userId="me", q=query).execute()
             messages = results.get("messages", [])
+            
+            # Simple console check - show how many new messages found
+            print(f"[{datetime.now().strftime('%H:%M:%S')}] {account.name}: {len(messages)} new messages")
 
             # Process each message
             for message in messages:
