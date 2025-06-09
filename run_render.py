@@ -13,7 +13,8 @@ def main():
     # First run the configuration test
     try:
         print("\n🔍 Running configuration tests...")
-        exec(open('test_render.py').read())
+        import test_render
+        test_render.main()
     except Exception as e:
         print(f"❌ Configuration test failed: {e}")
         return
