@@ -7,8 +7,9 @@ from dotenv import load_dotenv
 from email.header import decode_header
 import html2text
 
-# Încarcă variabilele din .env
+# Încarcă variabilele din .env (funcționează și pe Render)
 load_dotenv()
+load_dotenv('/etc/secrets/.env')  # Pentru Render Secret Files
 
 # Configurare cont unic Gmail
 GMAIL_USER = os.getenv("GMAIL_USER_1")
