@@ -3,3 +3,4 @@ python-dotenv==1.0.0
 html2text==2025.4.15
 requests==2.31.0
 flask==3.0.0
+pytz==2024.1

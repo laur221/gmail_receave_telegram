@@ -8,6 +8,8 @@ from email.header import decode_header
 import html2text
 import threading
 from flask import Flask
+from datetime import datetime
+import pytz
 
 # Încarcă variabilele din .env (funcționează și pe Render)
 load_dotenv()
@@ -25,23 +27,46 @@ bot = telebot.TeleBot(TELEGRAM_TOKEN)
 # Set pentru a ține evidența emailurilor deja procesate
 processed_emails = set()
 
+# Funcție pentru a obține ora locală din Moldova
+def get_moldova_time():
+    """Returnează data și ora din Moldova (UTC+2/UTC+3 - același timezone cu Europa/București)"""
+    moldova_tz = pytz.timezone('Europe/Bucharest')  # Moldova folosește același timezone
+    utc_now = datetime.utcnow().replace(tzinfo=pytz.UTC)
+    moldova_time = utc_now.astimezone(moldova_tz)
+    return moldova_time
+
+# Funcție pentru a escapa caractere speciale Markdown
+def escape_markdown(text):
+    """Escapează caracterele speciale pentru Markdown"""
+    if not text:
+        return ""
+    # Caractere care trebuie escapate în Markdown
+    escape_chars = ['*', '_', '`', '[', ']', '(', ')', '~', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
+    for char in escape_chars:
+        text = text.replace(char, f'\\{char}')
+    return text
+
 # Creează aplicația Flask pentru a satisface cerința de port a Render
 app = Flask(__name__)
 
 @app.route('/')
 def health_check():
+    moldova_time = get_moldova_time()
     return {
         "status": "Gmail Bot is running",
-        "timestamp": time.strftime('%Y-%m-%d %H:%M:%S'),
+        "timestamp": moldova_time.strftime('%Y-%m-%d %H:%M:%S'),
+        "timezone": "Europe/Bucharest (Moldova)",
         "processed_emails": len(processed_emails)
     }
 
 @app.route('/status')
 def status():
+    moldova_time = get_moldova_time()
     return {
         "gmail_user": GMAIL_USER,
         "bot_active": True,
-        "last_check": time.strftime('%Y-%m-%d %H:%M:%S')
+        "last_check": moldova_time.strftime('%Y-%m-%d %H:%M:%S'),
+        "timezone": "Europe/Bucharest (Moldova)"
     }
 
 @app.route('/env-check')
@@ -168,24 +193,57 @@ def check_email(is_first_run=False):
             if len(body) > 400:
                 body_clean += "..."
 
-            # Format the message nicely fără "Primit pe" și cu emailuri curate
+            # Escapează textul pentru Markdown
+            original_to_safe = escape_markdown(original_to_clean)
+            sender_safe = escape_markdown(sender_clean)
+            subject_safe = escape_markdown(subject)
+            body_safe = escape_markdown(body_clean)
+
+            # Obține ora locală din Moldova
+            moldova_time = get_moldova_time()
+            date_md = moldova_time.strftime('%d.%m.%Y')
+            time_md = moldova_time.strftime('%H:%M:%S')
+
+            # Format the message nicely cu text escapat pentru Markdown
             text_to_send = f"""
 📧 *Email Nou Primit*
 ━━━━━━━━━━━━━━━━━━━━
-📨 *Trimis la:* {original_to_clean}
-👤 *De la:* {sender_clean}
-📝 *Subiect:* {subject}
-📅 *Data:* {time.strftime('%d.%m.%Y')}
-⏰ *Ora:* {time.strftime('%H:%M:%S')}
+📨 *Trimis la:* {original_to_safe}
+👤 *De la:* {sender_safe}
+📝 *Subiect:* {subject_safe}
+📅 *Data:* {date_md}
+⏰ *Ora:* {time_md}
 ━━━━━━━━━━━━━━━━━━━━
 
 💬 *Conținut:*
-{body_clean}
+{body_safe}
 
 ────────────────────
 🤖 *Gmail Bot*
 """
-            bot.send_message(TELEGRAM_CHAT_ID, text_to_send, parse_mode="Markdown")
+            
+            try:
+                bot.send_message(TELEGRAM_CHAT_ID, text_to_send, parse_mode="Markdown")
+            except Exception as telegram_error:
+                # Dacă Markdown nu funcționează, trimite fără formatare
+                print(f"⚠️ Eroare Markdown, trimit fără formatare: {telegram_error}")
+                simple_text = f"""
+📧 Email Nou Primit
+━━━━━━━━━━━━━━━━━━━━
+📨 Trimis la: {original_to_clean}
+👤 De la: {sender_clean}
+📝 Subiect: {subject}
+📅 Data: {date_md}
+⏰ Ora: {time_md}
+━━━━━━━━━━━━━━━━━━━━
+
+💬 Conținut:
+{body_clean}
+
+────────────────────
+🤖 Gmail Bot
+"""
+                bot.send_message(TELEGRAM_CHAT_ID, simple_text)
 
         mail.logout()
         
