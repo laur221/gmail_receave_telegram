@@ -44,6 +44,17 @@ def status():
         "last_check": time.strftime('%Y-%m-%d %H:%M:%S')
     }
 
+@app.route('/env-check')
+def env_check():
+    """Verifică dacă variabilele de mediu sunt setate"""
+    return {
+        "GMAIL_USER_1": "SET" if GMAIL_USER else "NOT SET",
+        "GMAIL_PASS_1": "SET" if GMAIL_PASS else "NOT SET",
+        "TELEGRAM_TOKEN": "SET" if TELEGRAM_TOKEN else "NOT SET", 
+        "TELEGRAM_CHAT_ID": "SET" if TELEGRAM_CHAT_ID else "NOT SET",
+        "all_env_vars": dict(os.environ)  # Pentru debugging complet
+    }
+
 # === FUNCTIE DE VERIFICARE EMAIL ===
 def check_email(is_first_run=False):
     """Verifică emailurile pentru contul configurat"""
@@ -191,8 +202,16 @@ def run_email_bot():
     print("🚀 Pornind Gmail Bot...")
     print(f"📧 Cont configurat: {GMAIL_USER}")
     
+    # Debug: Verifică toate variabilele de mediu
+    print("🔍 Debug - Variabile de mediu:")
+    print(f"   GMAIL_USER_1: {'SET' if GMAIL_USER else 'NOT SET'}")
+    print(f"   GMAIL_PASS_1: {'SET' if GMAIL_PASS else 'NOT SET'}")  
+    print(f"   TELEGRAM_TOKEN: {'SET' if TELEGRAM_TOKEN else 'NOT SET'}")
+    print(f"   TELEGRAM_CHAT_ID: {'SET' if TELEGRAM_CHAT_ID else 'NOT SET'}")
+    
     if not GMAIL_USER or not GMAIL_PASS:
         print("❌ Verifică configurația din fișierul .env!")
+        print("💡 Pe Render, setează Environment Variables în Settings!")
         return
     
     print("\n⏰ Verificare la fiecare 30 de secunde...")
