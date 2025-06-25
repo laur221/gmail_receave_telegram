@@ -6,6 +6,8 @@ import os
 from dotenv import load_dotenv
 from email.header import decode_header
 import html2text
+import threading
+from flask import Flask
 
 # Încarcă variabilele din .env (funcționează și pe Render)
 load_dotenv()
@@ -22,6 +24,25 @@ bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
 # Set pentru a ține evidența emailurilor deja procesate
 processed_emails = set()
+
+# Creează aplicația Flask pentru a satisface cerința de port a Render
+app = Flask(__name__)
+
+@app.route('/')
+def health_check():
+    return {
+        "status": "Gmail Bot is running",
+        "timestamp": time.strftime('%Y-%m-%d %H:%M:%S'),
+        "processed_emails": len(processed_emails)
+    }
+
+@app.route('/status')
+def status():
+    return {
+        "gmail_user": GMAIL_USER,
+        "bot_active": True,
+        "last_check": time.strftime('%Y-%m-%d %H:%M:%S')
+    }
 
 # === FUNCTIE DE VERIFICARE EMAIL ===
 def check_email(is_first_run=False):
@@ -164,17 +185,17 @@ def check_email(is_first_run=False):
     except Exception as e:
         print(f"❌ Eroare: {e}")
 
-# === LOOP INFINIT ===
-if __name__ == "__main__":
+# === FUNCTIE PENTRU RULAREA BOTULUI IN BACKGROUND ===
+def run_email_bot():
+    """Rulează botul de email în background"""
     print("🚀 Pornind Gmail Bot...")
     print(f"📧 Cont configurat: {GMAIL_USER}")
     
     if not GMAIL_USER or not GMAIL_PASS:
         print("❌ Verifică configurația din fișierul .env!")
-        exit(1)
+        return
     
-    print("\n⏰ Verificare la fiecare 5 secunde...")
-    print("❌ Pentru a opri, apasă Ctrl+C\n")
+    print("\n⏰ Verificare la fiecare 30 de secunde...")
     
     # Prima rulare - marchează emailurile existente ca procesate
     print("📋 Încărcarea emailurilor existente...")
@@ -186,10 +207,18 @@ if __name__ == "__main__":
         try:
             print(f"🔍 Verificare emailuri - {time.strftime('%Y-%m-%d %H:%M:%S')}")
             check_email(is_first_run=False)
-            time.sleep(5)
-        except KeyboardInterrupt:
-            print("\n🛑 Bot oprit de utilizator!")
-            break
+            time.sleep(30)  # Mărit la 30 secunde pentru Render
         except Exception as e:
             print(f"❌ Eroare generală: {e}")
-            time.sleep(5)
+            time.sleep(30)
+
+# === MAIN ===
+if __name__ == "__main__":
+    # Pornește botul de email într-un thread separat
+    email_thread = threading.Thread(target=run_email_bot, daemon=True)
+    email_thread.start()
+    
+    # Pornește serverul Flask pentru a satisface cerința de port a Render
+    port = int(os.environ.get('PORT', 5000))
+    print(f"🌐 Pornind serverul web pe portul {port}...")
+    app.run(host='0.0.0.0', port=port, debug=False)
