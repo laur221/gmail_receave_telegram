@@ -37,11 +37,11 @@ def get_moldova_time():
 
 # Funcție pentru a escapa caractere speciale Markdown
 def escape_markdown(text):
-    """Escapează caracterele speciale pentru Markdown"""
+    """Escapează caracterele speciale pentru MarkdownV2 Telegram"""
     if not text:
         return ""
-    # Caractere care trebuie escapate în Markdown
-    escape_chars = ['*', '_', '`', '[', ']', '(', ')', '~', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
+    # Doar caracterele critice care chiar trebuie escapate
+    escape_chars = ['_', '*', '[', ']', '`']
     for char in escape_chars:
         text = text.replace(char, f'\\{char}')
     return text
@@ -204,19 +204,19 @@ def check_email(is_first_run=False):
             date_md = moldova_time.strftime('%d.%m.%Y')
             time_md = moldova_time.strftime('%H:%M:%S')
 
-            # Format the message nicely cu text escapat pentru Markdown
+            # Format the message nicely fără escapare pentru test
             text_to_send = f"""
 📧 *Email Nou Primit*
 ━━━━━━━━━━━━━━━━━━━━
-📨 *Trimis la:* {original_to_safe}
-👤 *De la:* {sender_safe}
-📝 *Subiect:* {subject_safe}
+📨 *Trimis la:* {original_to_clean}
+👤 *De la:* {sender_clean}
+📝 *Subiect:* {subject}
 📅 *Data:* {date_md}
 ⏰ *Ora:* {time_md}
 ━━━━━━━━━━━━━━━━━━━━
 
 💬 *Conținut:*
-{body_safe}
+{body_clean}
 
 ────────────────────
 🤖 *Gmail Bot*
@@ -225,7 +225,7 @@ def check_email(is_first_run=False):
             try:
                 bot.send_message(TELEGRAM_CHAT_ID, text_to_send, parse_mode="Markdown")
             except Exception as telegram_error:
-                # Dacă Markdown nu funcționează, trimite fără formatare
+                # Dacă MarkdownV2 nu funcționează, trimite fără formatare
                 print(f"⚠️ Eroare Markdown, trimit fără formatare: {telegram_error}")
                 simple_text = f"""
 📧 Email Nou Primit
